@@ -3,16 +3,12 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  // The Python worker loads Pyodide via dynamic import, so emit it as an ES module.
+  worker: { format: "es" },
   server: {
     host: "127.0.0.1",
     port: 5173,
-    proxy: {
-      // Forward API calls to the FastAPI backend so the frontend can use
-      // relative URLs and avoid CORS entirely in dev.
-      "/api": {
-        target: "http://127.0.0.1:8000",
-        changeOrigin: true,
-      },
-    },
+    // The worker imports ../backend/app/tracer.py (raw text) from outside this folder.
+    fs: { allow: [".."] },
   },
 });

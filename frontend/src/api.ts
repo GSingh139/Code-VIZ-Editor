@@ -8,13 +8,13 @@ export interface RunResult {
   stderr_truncated: boolean;
 }
 
-// Relative URLs: the Vite dev server proxies /api to the backend.
-const BASE = "/api";
+// Python runs in the browser (Pyodide in a Web Worker) — no server needed.
+import { ensureReady, execute } from "./py/runtime";
 
 export async function checkHealth(): Promise<boolean> {
   try {
-    const resp = await fetch(`${BASE}/health`);
-    return resp.ok;
+    await ensureReady();
+    return true;
   } catch {
     return false;
   }
@@ -31,27 +31,19 @@ export interface TraceResult extends RunResult {
 }
 
 export async function traceCode(code: string): Promise<TraceResult> {
-  const resp = await fetch(`${BASE}/trace`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code }),
-  });
-  if (!resp.ok) {
-    const detail = await resp.text().catch(() => "");
-    throw new Error(`Backend returned ${resp.status}: ${detail}`);
-  }
-  return resp.json();
+  const { trace, ...run } = await execute("trace", code);
+  return {
+    ...run,
+    trace_available: trace !== null,
+    steps_truncated: Boolean(trace?.steps_truncated),
+    steps: (trace?.steps as Step[]) ?? [],
+    loops: (trace?.loops as LoopMeta[]) ?? [],
+    subs: (trace?.subs as Record<string, SubEntry[]>) ?? {},
+  };
 }
 
 export async function runCode(code: string): Promise<RunResult> {
-  const resp = await fetch(`${BASE}/run`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code }),
-  });
-  if (!resp.ok) {
-    const detail = await resp.text().catch(() => "");
-    throw new Error(`Backend returned ${resp.status}: ${detail}`);
-  }
-  return resp.json();
+  const { trace: _unused, ...run } = await execute("run", code);
+  void _unused;
+  return run;
 }
