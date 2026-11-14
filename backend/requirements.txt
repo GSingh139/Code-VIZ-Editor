@@ -1,0 +1,10 @@
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+
+# Test dependencies
+pytest>=8.0
+httpx>=0.27
+
+# Example third-party library available to user code (import requests)
+requests>=2.32
