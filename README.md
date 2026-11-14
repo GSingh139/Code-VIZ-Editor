@@ -32,6 +32,16 @@ A locally hosted Python code editor with real subprocess-based execution
 > backend process. It is bound to localhost and intended for your own code on
 > your own machine. It is **not** a sandbox for untrusted public code.
 
+## Running on Netlify (in-browser Python)
+
+The deployed frontend does not need the FastAPI backend. Python runs directly
+in the browser with [Pyodide](https://pyodide.org) (CPython compiled to
+WebAssembly) inside a Web Worker, using the same `backend/app/tracer.py` for
+Visualize. `netlify.toml` builds the `frontend/` folder. Packages bundled
+with Pyodide (e.g. `numpy`) load automatically when imported; network
+libraries such as `requests` don't work in the browser. A run that goes past
+10 seconds is stopped by terminating the worker.
+
 ## Prerequisites
 
 - Python 3.11+ (developed on 3.14)

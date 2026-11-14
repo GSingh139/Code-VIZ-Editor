@@ -65,11 +65,13 @@ export default function App() {
   });
   const viewRef = useRef<EditorView | null>(null);
 
-  // Health check on load and every 10s.
+  // Load the in-browser Python runtime; retry every 10s if it failed.
   useEffect(() => {
     let cancelled = false;
+    let ok = false;
     const check = async () => {
-      const ok = await checkHealth();
+      if (ok) return;
+      ok = await checkHealth();
       if (!cancelled) setBackendUp(ok);
     };
     check();
@@ -198,7 +200,7 @@ export default function App() {
         setRequestError(
           err instanceof Error
             ? err.message
-            : "Could not reach the backend. Is it running on port 8000?"
+            : "Could not run the code in the Python runtime."
         );
       } finally {
         setBusy(null);
@@ -246,10 +248,10 @@ export default function App() {
             }`}
             title={
               backendUp === null
-                ? "Checking backend…"
+                ? "Loading Python runtime…"
                 : backendUp
-                  ? "Backend connected"
-                  : "Backend unreachable"
+                  ? "Python runtime ready"
+                  : "Python runtime failed to load"
             }
           />
           <button
@@ -274,9 +276,8 @@ export default function App() {
 
       {backendUp === false && (
         <div className="banner error-banner">
-          Backend unreachable. Start it with{" "}
-          <code>uvicorn app.main:app --host 127.0.0.1 --port 8000</code> from
-          the <code>backend</code> folder.
+          The Python runtime (Pyodide) could not be loaded. Check your
+          internet connection — it is downloaded from a CDN on first use.
         </div>
       )}
 
